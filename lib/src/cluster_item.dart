@@ -6,5 +6,5 @@ mixin ClusterItem {
 
   String? _geohash;
   String get geohash => _geohash ??=
-      Geohash.encode(location, codeLength: ClusterManager.precision);
+      Geohash.encode(location, codeLength: MapClusterManager.precision);
 }

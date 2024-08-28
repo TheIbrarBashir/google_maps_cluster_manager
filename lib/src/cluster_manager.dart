@@ -15,9 +15,9 @@ class MaxDistParams {
   MaxDistParams(this.epsilon);
 }
 
-class ClusterManager<T extends ClusterItem> {
-  ClusterManager(this._items, this.updateMarkers,
-      {Future<Marker> Function(Cluster<T>)? markerBuilder,
+class MapClusterManager<T extends ClusterItem> {
+  MapClusterManager(this._items, this.updateMarkers,
+      {Future<Marker> Function(MapCluster<T>)? markerBuilder,
       this.levels = const [1, 4.25, 6.75, 8.25, 11.5, 14.5, 16.0, 16.5, 20.0],
       this.extraPercent = 0.5,
       this.maxItemsForMaxDistAlgo = 200,
@@ -28,7 +28,7 @@ class ClusterManager<T extends ClusterItem> {
         assert(levels.length <= precision);
 
   /// Method to build markers
-  final Future<Marker> Function(Cluster<T>) markerBuilder;
+  final Future<Marker> Function(MapCluster<T>) markerBuilder;
 
   // Num of Items to switch from MAX_DIST algo to GEOHASH
   final int maxItemsForMaxDistAlgo;
@@ -78,7 +78,7 @@ class ClusterManager<T extends ClusterItem> {
   }
 
   void _updateClusters() async {
-    List<Cluster<T>> mapMarkers = await getMarkers();
+    List<MapCluster<T>> mapMarkers = await getMarkers();
 
     final Set<Marker> markers =
         Set.from(await Future.wait(mapMarkers.map((m) => markerBuilder(m))));
@@ -107,7 +107,7 @@ class ClusterManager<T extends ClusterItem> {
   }
 
   /// Retrieve cluster markers
-  Future<List<Cluster<T>>> getMarkers() async {
+  Future<List<MapCluster<T>>> getMarkers() async {
     if (_mapId == null) return List.empty();
 
     final LatLngBounds mapBounds = await GoogleMapsFlutterPlatform.instance
@@ -125,9 +125,9 @@ class ClusterManager<T extends ClusterItem> {
     }).toList();
 
     if (stopClusteringZoom != null && _zoom >= stopClusteringZoom!)
-      return visibleItems.map((i) => Cluster<T>.fromItems([i])).toList();
+      return visibleItems.map((i) => MapCluster<T>.fromItems([i])).toList();
 
-    List<Cluster<T>> markers;
+    List<MapCluster<T>> markers;
 
     if (clusterAlgorithm == ClusterAlgorithm.GEOHASH ||
         visibleItems.length >= maxItemsForMaxDistAlgo) {
@@ -187,7 +187,7 @@ class ClusterManager<T extends ClusterItem> {
     return 1;
   }
 
-  List<Cluster<T>> _computeClustersWithMaxDist(
+  List<MapCluster<T>> _computeClustersWithMaxDist(
       List<T> inputItems, double zoom) {
     MaxDistClustering<T> scanner = MaxDistClustering(
       epsilon: maxDistParams?.epsilon ?? 20,
@@ -196,8 +196,8 @@ class ClusterManager<T extends ClusterItem> {
     return scanner.run(inputItems, _getZoomLevel(zoom));
   }
 
-  List<Cluster<T>> _computeClusters(
-      List<T> inputItems, List<Cluster<T>> markerItems,
+  List<MapCluster<T>> _computeClusters(
+      List<T> inputItems, List<MapCluster<T>> markerItems,
       {int level = 5}) {
     if (inputItems.isEmpty) return markerItems;
     String nextGeohash = inputItems[0].geohash.substring(0, level);
@@ -206,7 +206,7 @@ class ClusterManager<T extends ClusterItem> {
         .where((p) => p.geohash.substring(0, level) == nextGeohash)
         .toList();
 
-    markerItems.add(Cluster<T>.fromItems(items));
+    markerItems.add(MapCluster<T>.fromItems(items));
 
     List<T> newInputList = List.from(
         inputItems.where((i) => i.geohash.substring(0, level) != nextGeohash));
@@ -214,7 +214,7 @@ class ClusterManager<T extends ClusterItem> {
     return _computeClusters(newInputList, markerItems, level: level);
   }
 
-  static Future<Marker> Function(Cluster) get _basicMarkerBuilder =>
+  static Future<Marker> Function(MapCluster) get _basicMarkerBuilder =>
       (cluster) async {
         return Marker(
           markerId: MarkerId(cluster.getId()),
