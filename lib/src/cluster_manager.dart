@@ -200,16 +200,16 @@ class MapClusterManager<T extends ClusterItem> {
       List<T> inputItems, List<MapCluster<T>> markerItems,
       {int level = 5}) {
     if (inputItems.isEmpty) return markerItems;
-    String nextGeohash = inputItems[0].geohash.substring(0, level);
+    String nextGeohash = inputItems[0].geoHash.substring(0, level);
 
     List<T> items = inputItems
-        .where((p) => p.geohash.substring(0, level) == nextGeohash)
+        .where((p) => p.geoHash.substring(0, level) == nextGeohash)
         .toList();
 
     markerItems.add(MapCluster<T>.fromItems(items));
 
     List<T> newInputList = List.from(
-        inputItems.where((i) => i.geohash.substring(0, level) != nextGeohash));
+        inputItems.where((i) => i.geoHash.substring(0, level) != nextGeohash));
 
     return _computeClusters(newInputList, markerItems, level: level);
   }

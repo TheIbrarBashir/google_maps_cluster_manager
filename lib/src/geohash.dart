@@ -9,7 +9,7 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 
 /// A collection of static functions to work with geohashes, as exlpained
 /// [here](https://en.wikipedia.org/wiki/Geohash)
-class Geohash {
+class GeoHash {
   static const Map<String, int> _base32CharToNumber = const <String, int>{
     '0': 0,
     '1': 1,
@@ -126,8 +126,8 @@ class Geohash {
   }
 
   /// Get the rectangle that covers the entire area of a geohash string.
-  static Rectangle<double> getExtents(String geohash) {
-    final codeLength = geohash.length;
+  static Rectangle<double> getExtents(String geoHash) {
+    final codeLength = geoHash.length;
     if (codeLength > 20 || (identical(1.0, 1) && codeLength > 12)) {
       //Javascript can only handle 32 bit ints reliably.
       throw ArgumentError(
@@ -137,12 +137,12 @@ class Geohash {
     var longitudeInt = 0;
     var longitudeFirst = true;
     for (var character
-        in geohash.codeUnits.map((r) => String.fromCharCode(r))) {
+        in geoHash.codeUnits.map((r) => String.fromCharCode(r))) {
       int? thisSequence;
       try {
         thisSequence = _base32CharToNumber[character];
       } on Exception catch (_) {
-        throw ArgumentError('$geohash was not a geohash string');
+        throw ArgumentError('$geoHash was not a geohash string');
       }
       final bigBits = ((thisSequence! & 16) >> 2) |
           ((thisSequence & 4) >> 1) |
@@ -185,9 +185,9 @@ class Geohash {
     return Rectangle<double>(latitude, longitude, height, width);
   }
 
-  /// Get a single number that is the center of a specific geohash rectangle.
-  static LatLng decode(String geohash) {
-    final extents = getExtents(geohash);
+  /// Get a single number that is the center of a specific geoHash rectangle.
+  static LatLng decode(String geoHash) {
+    final extents = getExtents(geoHash);
     final x = extents.left + extents.width / 2;
     final y = extents.top + extents.height / 2;
     return LatLng(x, y);
