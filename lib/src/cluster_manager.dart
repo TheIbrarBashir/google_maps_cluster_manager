@@ -23,7 +23,8 @@ class MapClusterManager<T extends ClusterItem> {
       this.maxItemsForMaxDistAlgo = 200,
       this.clusterAlgorithm = ClusterAlgorithm.GEOHASH,
       this.maxDistParams,
-      this.stopClusteringZoom})
+      this.stopClusteringZoom,
+      this.minCountForClustering})
       : this.markerBuilder = markerBuilder ?? _basicMarkerBuilder,
         assert(levels.length <= precision);
 
@@ -42,7 +43,7 @@ class MapClusterManager<T extends ClusterItem> {
   /// Extra percent of markers to be loaded (ex : 0.2 for 20%)
   final double extraPercent;
 
-  // Clusteringalgorithm
+  // Clustering algorithm
   final ClusterAlgorithm clusterAlgorithm;
 
   final MaxDistParams? maxDistParams;
@@ -50,7 +51,9 @@ class MapClusterManager<T extends ClusterItem> {
   /// Zoom level to stop cluster rendering
   final double? stopClusteringZoom;
 
-  /// Precision of the geohash
+  final int? minCountForClustering;
+
+  /// Precision of the geoHash
   static final int precision = kIsWeb ? 12 : 20;
 
   /// Google Maps map id
@@ -125,6 +128,10 @@ class MapClusterManager<T extends ClusterItem> {
     }).toList();
 
     if (stopClusteringZoom != null && _zoom >= stopClusteringZoom!)
+      return visibleItems.map((i) => MapCluster<T>.fromItems([i])).toList();
+
+    if (minCountForClustering != null &&
+        _items.length <= minCountForClustering!)
       return visibleItems.map((i) => MapCluster<T>.fromItems([i])).toList();
 
     List<MapCluster<T>> markers;
@@ -254,6 +261,6 @@ class MapClusterManager<T extends ClusterItem> {
     final img = await pictureRecorder.endRecording().toImage(size, size);
     final data = await img.toByteData(format: ImageByteFormat.png) as ByteData;
 
-    return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+    return BitmapDescriptor.bytes(data.buffer.asUint8List());
   }
 }
